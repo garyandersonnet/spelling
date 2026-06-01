@@ -334,6 +334,37 @@
     .form-group input:focus,
     .form-group textarea:focus { border-color: var(--accent); }
 
+    .word-lookup-row {
+      display: flex;
+      gap: 0.5rem;
+      align-items: center;
+    }
+    .word-lookup-row input { flex: 1; }
+
+    .lookup-btn {
+      background: transparent;
+      color: var(--accent);
+      border: 1px solid var(--accent);
+      border-radius: 6px;
+      padding: 0.55rem 0.9rem;
+      font-size: 0.88rem;
+      font-family: inherit;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background 0.15s, color 0.15s;
+      flex-shrink: 0;
+    }
+    .lookup-btn:hover { background: var(--accent); color: #fff; }
+    .lookup-btn:disabled { opacity: 0.5; cursor: default; }
+
+    .lookup-status {
+      font-size: 0.8rem;
+      margin-top: 0.3rem;
+      min-height: 1.1em;
+    }
+    .lookup-status.ok { color: var(--success); }
+    .lookup-status.err { color: var(--error); }
+
     .form-hint {
       font-size: 0.78rem;
       color: var(--muted);
@@ -394,12 +425,16 @@
     <h2>Add a New Word</h2>
     <div class="form-group">
       <label>Word</label>
-      <input type="text" id="f-word" placeholder="e.g. renaissance" autocorrect="off" spellcheck="false" />
+      <div class="word-lookup-row">
+        <input type="text" id="f-word" placeholder="e.g. renaissance" autocorrect="off" spellcheck="false" />
+        <button class="lookup-btn" id="lookupBtn">Look up</button>
+      </div>
+      <div class="lookup-status" id="lookupStatus"></div>
     </div>
     <div class="form-group">
       <label>Syllables</label>
       <input type="text" id="f-syllables" placeholder="e.g. ren, ais, sance" autocorrect="off" spellcheck="false" />
-      <div class="form-hint">Separate syllables with commas</div>
+      <div class="form-hint">Separate syllables with commas — edit if needed</div>
     </div>
     <div class="form-group">
       <label>Definition</label>
@@ -621,6 +656,81 @@
   // Modal
   const overlay = document.getElementById('modalOverlay');
   const modalError = document.getElementById('modalError');
+
+  // Simple English syllable splitter (vowel-cluster based)
+  function splitSyllables(word) {
+    const w = word.toLowerCase();
+    const parts = [];
+    const vowels = 'aeiouy';
+    let chunk = '';
+    let i = 0;
+    while (i < w.length) {
+      chunk += w[i];
+      const isVowel = vowels.includes(w[i]);
+      const nextIsVowel = vowels.includes(w[i + 1] || '');
+      const afterNextIsVowel = vowels.includes(w[i + 2] || '');
+      if (isVowel && !nextIsVowel && afterNextIsVowel && chunk.length > 1) {
+        parts.push(chunk);
+        chunk = '';
+      } else if (!isVowel && nextIsVowel && parts.length > 0 && chunk.length > 2) {
+        parts.push(chunk.slice(0, -1));
+        chunk = chunk.slice(-1);
+      }
+      i++;
+    }
+    if (chunk) parts.push(chunk);
+    return parts.length > 1 ? parts : [word.toLowerCase()];
+  }
+
+  async function lookupWord() {
+    const word = document.getElementById('f-word').value.trim();
+    if (!word) return;
+    const btn = document.getElementById('lookupBtn');
+    const status = document.getElementById('lookupStatus');
+    btn.disabled = true;
+    btn.textContent = 'Looking up…';
+    status.className = 'lookup-status';
+    status.textContent = '';
+    try {
+      const res = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(word)}`);
+      if (!res.ok) throw new Error('not found');
+      const data = await res.json();
+      const entry = data[0];
+
+      // Definition: first definition from first meaning
+      const meaning = entry.meanings?.[0];
+      const def = meaning?.definitions?.[0]?.definition || '';
+      const partOfSpeech = meaning?.partOfSpeech || '';
+      if (def) document.getElementById('f-definition').value = partOfSpeech ? `(${partOfSpeech}) ${def}` : def;
+
+      // Syllables: try phonetic text, else fall back to splitter
+      const phonetic = entry.phonetic || entry.phonetics?.find(p => p.text)?.text || '';
+      // Phonetic like /ˌren.əˈsɑːns/ — extract dot-separated segments if present
+      const dotMatch = phonetic.replace(/[\/\[\]ˌˈ]/g, '').split('.');
+      const sylField = document.getElementById('f-syllables');
+      if (dotMatch.length > 1) {
+        sylField.value = dotMatch.map(s => s.trim()).filter(Boolean).join(', ');
+      } else {
+        sylField.value = splitSyllables(word).join(', ');
+      }
+
+      status.className = 'lookup-status ok';
+      status.textContent = '✓ Definition loaded — review and edit as needed.';
+    } catch {
+      // Fall back to syllable splitter only
+      document.getElementById('f-syllables').value = splitSyllables(word).join(', ');
+      status.className = 'lookup-status err';
+      status.textContent = '✗ Word not found in dictionary. Syllables estimated — please check.';
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Look up';
+    }
+  }
+
+  document.getElementById('lookupBtn').addEventListener('click', lookupWord);
+  document.getElementById('f-word').addEventListener('keydown', e => {
+    if (e.key === 'Enter') { e.preventDefault(); lookupWord(); }
+  });
 
   document.getElementById('addWordBtn').addEventListener('click', () => {
     document.getElementById('f-word').value = '';
