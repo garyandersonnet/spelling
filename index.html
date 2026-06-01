@@ -25,7 +25,7 @@
       background: var(--bg);
       color: var(--text);
       min-height: 100vh;
-      padding: 2rem 1rem;
+      padding: 2rem 1rem 6rem;
     }
 
     h1 {
@@ -34,7 +34,6 @@
       font-weight: normal;
       letter-spacing: 0.04em;
       margin-bottom: 0.4rem;
-      color: var(--text);
     }
 
     .subtitle {
@@ -59,6 +58,7 @@
       border-radius: 10px;
       padding: 1.6rem 1.8rem;
       box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+      position: relative;
     }
 
     .word-header {
@@ -90,15 +90,27 @@
       flex-shrink: 0;
       transition: opacity 0.15s;
     }
-
     .speak-btn:hover { opacity: 0.85; }
-    .speak-btn:active { opacity: 0.7; }
 
     .word-label {
       font-size: 1rem;
       color: var(--muted);
       font-style: italic;
+      flex: 1;
     }
+
+    .delete-word-btn {
+      background: transparent;
+      border: none;
+      color: #ccc;
+      font-size: 1.1rem;
+      cursor: pointer;
+      padding: 0.2rem 0.4rem;
+      border-radius: 4px;
+      transition: color 0.15s;
+      line-height: 1;
+    }
+    .delete-word-btn:hover { color: var(--error); }
 
     .section-row {
       display: flex;
@@ -123,10 +135,8 @@
       margin-top: 2px;
       transition: background 0.15s, color 0.15s;
     }
-
     .speak-btn-sm:hover { background: var(--accent); color: #fff; }
 
-    /* Syllables */
     .syllables {
       display: flex;
       align-items: center;
@@ -149,7 +159,6 @@
       user-select: none;
     }
 
-    /* Definition */
     .definition {
       font-size: 0.92rem;
       color: var(--muted);
@@ -160,7 +169,6 @@
       flex: 1;
     }
 
-    /* Spelling tip */
     .spelling-tip {
       background: #f5f2ec;
       border-radius: 6px;
@@ -180,7 +188,6 @@
       margin-bottom: 0.3rem;
     }
 
-    /* Practice area */
     .practice {
       display: flex;
       gap: 0.6rem;
@@ -199,10 +206,7 @@
       outline: none;
       transition: border-color 0.15s;
     }
-
-    .practice input:focus {
-      border-color: var(--accent);
-    }
+    .practice input:focus { border-color: var(--accent); }
 
     .check-btn {
       background: var(--accent);
@@ -215,7 +219,6 @@
       transition: opacity 0.15s;
       white-space: nowrap;
     }
-
     .check-btn:hover { opacity: 0.85; }
 
     .clear-btn {
@@ -226,9 +229,7 @@
       padding: 0.55rem 0.8rem;
       font-size: 0.9rem;
       cursor: pointer;
-      transition: opacity 0.15s;
     }
-
     .clear-btn:hover { opacity: 0.7; }
 
     .feedback {
@@ -239,20 +240,144 @@
       font-size: 0.92rem;
       display: none;
     }
-
     .feedback.correct {
       display: block;
       background: var(--success-bg);
       color: var(--success);
       border: 1px solid #b5dfc8;
     }
-
     .feedback.incorrect {
       display: block;
       background: var(--error-bg);
       color: var(--error);
       border: 1px solid #f0c4bb;
     }
+
+    /* FAB */
+    .fab {
+      position: fixed;
+      bottom: 2rem;
+      right: 2rem;
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: 50px;
+      padding: 0.75rem 1.4rem;
+      font-size: 1rem;
+      font-family: inherit;
+      cursor: pointer;
+      box-shadow: 0 4px 14px rgba(74,111,165,0.4);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      transition: opacity 0.15s, transform 0.15s;
+      z-index: 100;
+    }
+    .fab:hover { opacity: 0.9; transform: translateY(-1px); }
+
+    /* Modal */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.35);
+      z-index: 200;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+    }
+    .modal-overlay.open { display: flex; }
+
+    .modal {
+      background: #fff;
+      border-radius: 12px;
+      padding: 2rem;
+      width: 100%;
+      max-width: 560px;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: 0 8px 40px rgba(0,0,0,0.18);
+    }
+
+    .modal h2 {
+      font-size: 1.2rem;
+      font-weight: normal;
+      margin-bottom: 1.4rem;
+      color: var(--text);
+    }
+
+    .form-group {
+      margin-bottom: 1.1rem;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      color: var(--muted);
+      margin-bottom: 0.35rem;
+    }
+
+    .form-group input,
+    .form-group textarea {
+      width: 100%;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 0.55rem 0.8rem;
+      font-size: 0.95rem;
+      font-family: inherit;
+      outline: none;
+      transition: border-color 0.15s;
+      resize: vertical;
+    }
+    .form-group input:focus,
+    .form-group textarea:focus { border-color: var(--accent); }
+
+    .form-hint {
+      font-size: 0.78rem;
+      color: var(--muted);
+      margin-top: 0.25rem;
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: 0.6rem;
+      justify-content: flex-end;
+      margin-top: 1.5rem;
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      padding: 0.6rem 1.3rem;
+      font-size: 0.95rem;
+      font-family: inherit;
+      cursor: pointer;
+      transition: opacity 0.15s;
+    }
+    .btn-primary:hover { opacity: 0.85; }
+
+    .btn-cancel {
+      background: transparent;
+      color: var(--muted);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 0.6rem 1rem;
+      font-size: 0.95rem;
+      font-family: inherit;
+      cursor: pointer;
+    }
+
+    .modal-error {
+      color: var(--error);
+      font-size: 0.85rem;
+      margin-top: 0.5rem;
+      display: none;
+    }
+    .modal-error.visible { display: block; }
   </style>
 </head>
 <body>
@@ -262,47 +387,95 @@
 
 <div class="word-list" id="wordList"></div>
 
+<button class="fab" id="addWordBtn">&#43; Add Word</button>
+
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <h2>Add a New Word</h2>
+    <div class="form-group">
+      <label>Word</label>
+      <input type="text" id="f-word" placeholder="e.g. renaissance" autocorrect="off" spellcheck="false" />
+    </div>
+    <div class="form-group">
+      <label>Syllables</label>
+      <input type="text" id="f-syllables" placeholder="e.g. ren, ais, sance" autocorrect="off" spellcheck="false" />
+      <div class="form-hint">Separate syllables with commas</div>
+    </div>
+    <div class="form-group">
+      <label>Definition</label>
+      <textarea id="f-definition" rows="3" placeholder="What does the word mean?"></textarea>
+    </div>
+    <div class="form-group">
+      <label>How to remember it</label>
+      <textarea id="f-tip" rows="4" placeholder="Tips, mnemonics, or patterns to help spell it…"></textarea>
+    </div>
+    <div class="modal-error" id="modalError">Please fill in the word and at least one syllable.</div>
+    <div class="modal-actions">
+      <button class="btn-cancel" id="cancelBtn">Cancel</button>
+      <button class="btn-primary" id="saveWordBtn">Save Word</button>
+    </div>
+  </div>
+</div>
+
 <script>
-  const words = [
+  const COOKIE_KEY = 'spelling_words';
+  const COOKIE_DAYS = 365;
+
+  const builtIn = [
     {
       word: "renaissance",
       syllables: ["ren", "ais", "sance"],
       definition: "A period of renewed interest in classical art, architecture, literature, and learning that began in 14th-century Italy and spread across Europe; also, any period of new growth or revived activity.",
-      tip: "Break it into three parts you already know: REN (like \"wren\" the bird, minus the w) + AIS (sounds like \"ace\") + SANCE (sounds like \"sonce\"). Remember the silent silent flow: r-e-n-a-i-s-s-a-n-c-e — the double S in the middle is the most common stumble. Say to yourself: \"WREN — ACE — SANCE.\""
+      tip: "Break it into three parts you already know: REN (like \"wren\" the bird, minus the w) + AIS (sounds like \"ace\") + SANCE (sounds like \"sonce\"). The double S in the middle is the most common stumble. Say to yourself: \"WREN — ACE — SANCE.\""
     },
     {
       word: "Michelangelo",
       syllables: ["Mi", "chel", "an", "ge", "lo"],
       definition: "Italian Renaissance artist (1475–1564) renowned for painting the Sistine Chapel ceiling, sculpting David and the Pietà, and designing the dome of St. Peter's Basilica.",
-      tip: "Five syllables, all short: MI-CHEL-AN-GE-LO. Think of a chant — like clapping each beat. The tricky part is the CH (which sounds like K) and remembering the E before L-O at the end. Picture: \"My shell — angel — oh!\" That gives you the sound and the letters."
+      tip: "Five syllables, all short: MI-CHEL-AN-GE-LO. Think of a chant — like clapping each beat. The tricky part is the CH (which sounds like K) and remembering the E before L-O at the end. Picture: \"My shell — angel — oh!\""
     }
   ];
 
-  const synth = window.speechSynthesis;
+  // Cookie helpers
+  function saveCookie(key, value, days) {
+    const expires = new Date(Date.now() + days * 864e5).toUTCString();
+    document.cookie = `${key}=${encodeURIComponent(JSON.stringify(value))}; expires=${expires}; path=/; SameSite=Lax`;
+  }
 
+  function loadCookie(key) {
+    const match = document.cookie.split('; ').find(r => r.startsWith(key + '='));
+    if (!match) return [];
+    try { return JSON.parse(decodeURIComponent(match.split('=').slice(1).join('='))); }
+    catch { return []; }
+  }
+
+  function loadCustomWords() { return loadCookie(COOKIE_KEY); }
+  function saveCustomWords(arr) { saveCookie(COOKIE_KEY, arr, COOKIE_DAYS); }
+
+  function deleteCustomWord(word) {
+    const updated = loadCustomWords().filter(w => w.word !== word);
+    saveCustomWords(updated);
+    renderAll();
+  }
+
+  // TTS
+  const synth = window.speechSynthesis;
   function speak(text) {
     synth.cancel();
-    const utter = new SpeechSynthesisUtterance(text);
-    utter.rate = 0.85;
-    utter.pitch = 1;
-    synth.speak(utter);
+    const u = new SpeechSynthesisUtterance(text);
+    u.rate = 0.85;
+    synth.speak(u);
   }
 
   function checkSpelling(word, input, feedbackEl) {
     const typed = input.value.trim();
     if (!typed) return;
-
     const correct = typed.toLowerCase() === word.toLowerCase();
     feedbackEl.className = 'feedback ' + (correct ? 'correct' : 'incorrect');
     feedbackEl.textContent = correct
       ? '✓ Correct! Well done.'
       : `✗ Not quite. You wrote "${typed}" — try again.`;
-
-    if (correct) {
-      input.style.borderColor = '#2e7d4f';
-    } else {
-      input.style.borderColor = '#b5341e';
-    }
+    input.style.borderColor = correct ? '#2e7d4f' : '#b5341e';
   }
 
   function clearEntry(input, feedbackEl) {
@@ -313,17 +486,32 @@
     input.focus();
   }
 
-  function buildCard(entry, index) {
+  function smallSpeakBtn(text, title) {
+    const btn = document.createElement('button');
+    btn.className = 'speak-btn-sm';
+    btn.title = title;
+    btn.innerHTML = '&#128266;';
+    btn.addEventListener('click', () => speak(text));
+    return btn;
+  }
+
+  function sectionRow(...children) {
+    const row = document.createElement('div');
+    row.className = 'section-row';
+    children.forEach(c => row.appendChild(c));
+    return row;
+  }
+
+  function buildCard(entry, index, isCustom) {
     const card = document.createElement('div');
     card.className = 'word-card';
 
-    // Header: number + speaker + label
     const header = document.createElement('div');
     header.className = 'word-header';
 
     const num = document.createElement('span');
     num.className = 'word-number';
-    num.textContent = index + 1 + '.';
+    num.textContent = (index + 1) + '.';
 
     const speakBtn = document.createElement('button');
     speakBtn.className = 'speak-btn';
@@ -337,20 +525,15 @@
 
     header.append(num, speakBtn, label);
 
-    function smallSpeakBtn(text, title) {
-      const btn = document.createElement('button');
-      btn.className = 'speak-btn-sm';
-      btn.title = title;
-      btn.innerHTML = '&#128266;';
-      btn.addEventListener('click', () => speak(text));
-      return btn;
-    }
-
-    function sectionRow(...children) {
-      const row = document.createElement('div');
-      row.className = 'section-row';
-      children.forEach(c => row.appendChild(c));
-      return row;
+    if (isCustom) {
+      const delBtn = document.createElement('button');
+      delBtn.className = 'delete-word-btn';
+      delBtn.title = 'Remove this word';
+      delBtn.textContent = '×';
+      delBtn.addEventListener('click', () => {
+        if (confirm(`Remove "${entry.word}" from the list?`)) deleteCustomWord(entry.word);
+      });
+      header.appendChild(delBtn);
     }
 
     // Syllables
@@ -376,18 +559,18 @@
     // Definition
     const defEl = document.createElement('div');
     defEl.className = 'definition';
-    defEl.textContent = entry.definition;
+    defEl.textContent = entry.definition || '—';
     const defRow = sectionRow(
-      smallSpeakBtn(entry.definition, 'Hear definition'),
+      smallSpeakBtn(entry.definition || entry.word, 'Hear definition'),
       defEl
     );
 
     // Spelling tip
     const tipEl = document.createElement('div');
     tipEl.className = 'spelling-tip';
-    tipEl.innerHTML = '<strong>How to remember it</strong>' + entry.tip;
+    tipEl.innerHTML = '<strong>How to remember it</strong>' + (entry.tip || '—');
     const tipRow = sectionRow(
-      smallSpeakBtn(entry.tip, 'Hear spelling tip'),
+      smallSpeakBtn(entry.tip || entry.word, 'Hear spelling tip'),
       tipEl
     );
 
@@ -420,13 +603,75 @@
     });
 
     practice.append(input, checkBtn, clearBtn, feedback);
-
     card.append(header, syllablesRow, defRow, tipRow, practice);
     return card;
   }
 
-  const list = document.getElementById('wordList');
-  words.forEach((entry, i) => list.appendChild(buildCard(entry, i)));
+  function renderAll() {
+    const list = document.getElementById('wordList');
+    list.innerHTML = '';
+    const custom = loadCustomWords();
+    const all = [...builtIn, ...custom];
+    all.forEach((entry, i) => {
+      const isCustom = i >= builtIn.length;
+      list.appendChild(buildCard(entry, i, isCustom));
+    });
+  }
+
+  // Modal
+  const overlay = document.getElementById('modalOverlay');
+  const modalError = document.getElementById('modalError');
+
+  document.getElementById('addWordBtn').addEventListener('click', () => {
+    document.getElementById('f-word').value = '';
+    document.getElementById('f-syllables').value = '';
+    document.getElementById('f-definition').value = '';
+    document.getElementById('f-tip').value = '';
+    modalError.classList.remove('visible');
+    overlay.classList.add('open');
+    setTimeout(() => document.getElementById('f-word').focus(), 50);
+  });
+
+  document.getElementById('cancelBtn').addEventListener('click', () => {
+    overlay.classList.remove('open');
+  });
+
+  overlay.addEventListener('click', e => {
+    if (e.target === overlay) overlay.classList.remove('open');
+  });
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') overlay.classList.remove('open');
+  });
+
+  document.getElementById('saveWordBtn').addEventListener('click', () => {
+    const word = document.getElementById('f-word').value.trim();
+    const syllablesRaw = document.getElementById('f-syllables').value.trim();
+    const definition = document.getElementById('f-definition').value.trim();
+    const tip = document.getElementById('f-tip').value.trim();
+
+    if (!word || !syllablesRaw) {
+      modalError.classList.add('visible');
+      return;
+    }
+
+    const syllables = syllablesRaw.split(',').map(s => s.trim()).filter(Boolean);
+    const newEntry = { word, syllables, definition, tip };
+
+    const custom = loadCustomWords();
+    custom.push(newEntry);
+    saveCustomWords(custom);
+
+    overlay.classList.remove('open');
+    renderAll();
+
+    setTimeout(() => {
+      const cards = document.querySelectorAll('.word-card');
+      cards[cards.length - 1].scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 100);
+  });
+
+  renderAll();
 </script>
 </body>
 </html>
