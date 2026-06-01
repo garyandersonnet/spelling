@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Spelling Practice</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #f9f7f4;
+      --card: #fff;
+      --text: #1a1a1a;
+      --muted: #666;
+      --border: #e0dbd4;
+      --accent: #4a6fa5;
+      --success: #2e7d4f;
+      --error: #b5341e;
+      --success-bg: #edf7f1;
+      --error-bg: #fdf0ed;
+    }
+
+    body {
+      font-family: 'Georgia', serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 2rem 1rem;
+    }
+
+    h1 {
+      text-align: center;
+      font-size: 1.8rem;
+      font-weight: normal;
+      letter-spacing: 0.04em;
+      margin-bottom: 0.4rem;
+      color: var(--text);
+    }
+
+    .subtitle {
+      text-align: center;
+      color: var(--muted);
+      font-style: italic;
+      font-size: 0.95rem;
+      margin-bottom: 2.5rem;
+    }
+
+    .word-list {
+      max-width: 720px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    .word-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1.6rem 1.8rem;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+    }
+
+    .word-header {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 1.2rem;
+    }
+
+    .word-number {
+      font-size: 0.8rem;
+      color: var(--muted);
+      font-style: italic;
+      min-width: 1.4rem;
+    }
+
+    .speak-btn {
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: 50%;
+      width: 38px;
+      height: 38px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1rem;
+      flex-shrink: 0;
+      transition: opacity 0.15s;
+    }
+
+    .speak-btn:hover { opacity: 0.85; }
+    .speak-btn:active { opacity: 0.7; }
+
+    .word-label {
+      font-size: 1rem;
+      color: var(--muted);
+      font-style: italic;
+    }
+
+    .section-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+    }
+
+    .speak-btn-sm {
+      background: transparent;
+      color: var(--accent);
+      border: 1px solid var(--border);
+      border-radius: 50%;
+      width: 28px;
+      height: 28px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.75rem;
+      flex-shrink: 0;
+      margin-top: 2px;
+      transition: background 0.15s, color 0.15s;
+    }
+
+    .speak-btn-sm:hover { background: var(--accent); color: #fff; }
+
+    /* Syllables */
+    .syllables {
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
+      flex-wrap: wrap;
+      flex: 1;
+    }
+
+    .syllable {
+      font-size: 1.15rem;
+      font-weight: bold;
+      letter-spacing: 0.02em;
+      color: var(--accent);
+    }
+
+    .dot {
+      color: var(--muted);
+      font-size: 1.3rem;
+      line-height: 1;
+      user-select: none;
+    }
+
+    /* Definition */
+    .definition {
+      font-size: 0.92rem;
+      color: var(--muted);
+      line-height: 1.55;
+      border-left: 3px solid var(--border);
+      padding-left: 0.75rem;
+      font-style: italic;
+      flex: 1;
+    }
+
+    /* Spelling tip */
+    .spelling-tip {
+      background: #f5f2ec;
+      border-radius: 6px;
+      padding: 0.75rem 1rem;
+      font-size: 0.9rem;
+      line-height: 1.6;
+      color: #3a3020;
+      flex: 1;
+    }
+
+    .spelling-tip strong {
+      display: block;
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      color: var(--muted);
+      margin-bottom: 0.3rem;
+    }
+
+    /* Practice area */
+    .practice {
+      display: flex;
+      gap: 0.6rem;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .practice input {
+      flex: 1;
+      min-width: 200px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 0.55rem 0.8rem;
+      font-size: 1rem;
+      font-family: inherit;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+
+    .practice input:focus {
+      border-color: var(--accent);
+    }
+
+    .check-btn {
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      padding: 0.55rem 1.1rem;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: opacity 0.15s;
+      white-space: nowrap;
+    }
+
+    .check-btn:hover { opacity: 0.85; }
+
+    .clear-btn {
+      background: transparent;
+      color: var(--muted);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 0.55rem 0.8rem;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: opacity 0.15s;
+    }
+
+    .clear-btn:hover { opacity: 0.7; }
+
+    .feedback {
+      width: 100%;
+      margin-top: 0.5rem;
+      padding: 0.55rem 0.8rem;
+      border-radius: 6px;
+      font-size: 0.92rem;
+      display: none;
+    }
+
+    .feedback.correct {
+      display: block;
+      background: var(--success-bg);
+      color: var(--success);
+      border: 1px solid #b5dfc8;
+    }
+
+    .feedback.incorrect {
+      display: block;
+      background: var(--error-bg);
+      color: var(--error);
+      border: 1px solid #f0c4bb;
+    }
+  </style>
+</head>
+<body>
+
+<h1>Spelling Practice</h1>
+<p class="subtitle">Click the speaker to hear a word, then type it correctly.</p>
+
+<div class="word-list" id="wordList"></div>
+
+<script>
+  const words = [
+    {
+      word: "renaissance",
+      syllables: ["ren", "ais", "sance"],
+      definition: "A period of renewed interest in classical art, architecture, literature, and learning that began in 14th-century Italy and spread across Europe; also, any period of new growth or revived activity.",
+      tip: "Break it into three parts you already know: REN (like \"wren\" the bird, minus the w) + AIS (sounds like \"ace\") + SANCE (sounds like \"sonce\"). Remember the silent silent flow: r-e-n-a-i-s-s-a-n-c-e — the double S in the middle is the most common stumble. Say to yourself: \"WREN — ACE — SANCE.\""
+    },
+    {
+      word: "Michelangelo",
+      syllables: ["Mi", "chel", "an", "ge", "lo"],
+      definition: "Italian Renaissance artist (1475–1564) renowned for painting the Sistine Chapel ceiling, sculpting David and the Pietà, and designing the dome of St. Peter's Basilica.",
+      tip: "Five syllables, all short: MI-CHEL-AN-GE-LO. Think of a chant — like clapping each beat. The tricky part is the CH (which sounds like K) and remembering the E before L-O at the end. Picture: \"My shell — angel — oh!\" That gives you the sound and the letters."
+    }
+  ];
+
+  const synth = window.speechSynthesis;
+
+  function speak(text) {
+    synth.cancel();
+    const utter = new SpeechSynthesisUtterance(text);
+    utter.rate = 0.85;
+    utter.pitch = 1;
+    synth.speak(utter);
+  }
+
+  function checkSpelling(word, input, feedbackEl) {
+    const typed = input.value.trim();
+    if (!typed) return;
+
+    const correct = typed.toLowerCase() === word.toLowerCase();
+    feedbackEl.className = 'feedback ' + (correct ? 'correct' : 'incorrect');
+    feedbackEl.textContent = correct
+      ? '✓ Correct! Well done.'
+      : `✗ Not quite. You wrote "${typed}" — try again.`;
+
+    if (correct) {
+      input.style.borderColor = '#2e7d4f';
+    } else {
+      input.style.borderColor = '#b5341e';
+    }
+  }
+
+  function clearEntry(input, feedbackEl) {
+    input.value = '';
+    input.style.borderColor = '';
+    feedbackEl.className = 'feedback';
+    feedbackEl.textContent = '';
+    input.focus();
+  }
+
+  function buildCard(entry, index) {
+    const card = document.createElement('div');
+    card.className = 'word-card';
+
+    // Header: number + speaker + label
+    const header = document.createElement('div');
+    header.className = 'word-header';
+
+    const num = document.createElement('span');
+    num.className = 'word-number';
+    num.textContent = index + 1 + '.';
+
+    const speakBtn = document.createElement('button');
+    speakBtn.className = 'speak-btn';
+    speakBtn.title = 'Hear the word';
+    speakBtn.innerHTML = '&#128266;';
+    speakBtn.addEventListener('click', () => speak(entry.word));
+
+    const label = document.createElement('span');
+    label.className = 'word-label';
+    label.textContent = 'Click the speaker to hear the word';
+
+    header.append(num, speakBtn, label);
+
+    function smallSpeakBtn(text, title) {
+      const btn = document.createElement('button');
+      btn.className = 'speak-btn-sm';
+      btn.title = title;
+      btn.innerHTML = '&#128266;';
+      btn.addEventListener('click', () => speak(text));
+      return btn;
+    }
+
+    function sectionRow(...children) {
+      const row = document.createElement('div');
+      row.className = 'section-row';
+      children.forEach(c => row.appendChild(c));
+      return row;
+    }
+
+    // Syllables
+    const syllablesEl = document.createElement('div');
+    syllablesEl.className = 'syllables';
+    entry.syllables.forEach((syl, i) => {
+      const s = document.createElement('span');
+      s.className = 'syllable';
+      s.textContent = syl;
+      syllablesEl.appendChild(s);
+      if (i < entry.syllables.length - 1) {
+        const dot = document.createElement('span');
+        dot.className = 'dot';
+        dot.textContent = '•';
+        syllablesEl.appendChild(dot);
+      }
+    });
+    const syllablesRow = sectionRow(
+      smallSpeakBtn(entry.syllables.join(' ... '), 'Hear syllables'),
+      syllablesEl
+    );
+
+    // Definition
+    const defEl = document.createElement('div');
+    defEl.className = 'definition';
+    defEl.textContent = entry.definition;
+    const defRow = sectionRow(
+      smallSpeakBtn(entry.definition, 'Hear definition'),
+      defEl
+    );
+
+    // Spelling tip
+    const tipEl = document.createElement('div');
+    tipEl.className = 'spelling-tip';
+    tipEl.innerHTML = '<strong>How to remember it</strong>' + entry.tip;
+    const tipRow = sectionRow(
+      smallSpeakBtn(entry.tip, 'Hear spelling tip'),
+      tipEl
+    );
+
+    // Practice
+    const practice = document.createElement('div');
+    practice.className = 'practice';
+
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.placeholder = 'Type the word here…';
+    input.autocomplete = 'off';
+    input.autocorrect = 'off';
+    input.spellcheck = false;
+
+    const checkBtn = document.createElement('button');
+    checkBtn.className = 'check-btn';
+    checkBtn.textContent = 'Check';
+
+    const clearBtn = document.createElement('button');
+    clearBtn.className = 'clear-btn';
+    clearBtn.textContent = 'Clear';
+
+    const feedback = document.createElement('div');
+    feedback.className = 'feedback';
+
+    checkBtn.addEventListener('click', () => checkSpelling(entry.word, input, feedback));
+    clearBtn.addEventListener('click', () => clearEntry(input, feedback));
+    input.addEventListener('keydown', e => {
+      if (e.key === 'Enter') checkSpelling(entry.word, input, feedback);
+    });
+
+    practice.append(input, checkBtn, clearBtn, feedback);
+
+    card.append(header, syllablesRow, defRow, tipRow, practice);
+    return card;
+  }
+
+  const list = document.getElementById('wordList');
+  words.forEach((entry, i) => list.appendChild(buildCard(entry, i)));
+</script>
+</body>
+</html>
