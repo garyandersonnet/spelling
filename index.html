@@ -416,6 +416,7 @@
 <h1>Spelling Practice</h1>
 <p class="subtitle">Click the speaker to hear a word, then type it correctly.</p>
 
+<p id="pageStatus" style="text-align:center;color:var(--muted);font-style:italic;font-size:0.9rem;min-height:1.4em;margin-bottom:1rem"></p>
 <div class="word-list" id="wordList"></div>
 
 <button class="fab" id="addWordBtn">&#43; Add Word</button>
@@ -453,7 +454,10 @@
 </div>
 
 <script>
-  const STORAGE_KEY = 'spelling_words';
+  // ── Google Apps Script URL ──────────────────────────────────────────────────
+  // After deploying the Apps Script web app, paste the URL here:
+  const SCRIPT_URL = '';
+  // ────────────────────────────────────────────────────────────────────────────
 
   const builtIn = [
     {
@@ -470,19 +474,47 @@
     }
   ];
 
-  function loadCustomWords() {
-    try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); }
-    catch { return []; }
+  // Sheet API helpers
+  async function sheetFetch(params) {
+    if (!SCRIPT_URL) return null;
+    const url = new URL(SCRIPT_URL);
+    Object.entries(params).forEach(([k, v]) => url.searchParams.set(k, v));
+    const res = await fetch(url.toString());
+    if (!res.ok) throw new Error('Sheet request failed');
+    return res.json();
   }
 
-  function saveCustomWords(arr) {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(arr));
+  async function sheetPost(body) {
+    if (!SCRIPT_URL) return null;
+    const res = await fetch(SCRIPT_URL, {
+      method: 'POST',
+      body: JSON.stringify(body)
+    });
+    if (!res.ok) throw new Error('Sheet request failed');
+    return res.json();
   }
 
-  function deleteCustomWord(word) {
-    const updated = loadCustomWords().filter(w => w.word !== word);
-    saveCustomWords(updated);
-    renderAll();
+  async function loadCustomWords() {
+    if (!SCRIPT_URL) return [];
+    try {
+      const data = await sheetFetch({ action: 'list' });
+      return data || [];
+    } catch { return []; }
+  }
+
+  async function addWordToSheet(entry) {
+    return sheetPost({ action: 'add', ...entry, syllables: entry.syllables.join('|') });
+  }
+
+  async function deleteWordFromSheet(word) {
+    return sheetPost({ action: 'delete', word });
+  }
+
+  async function deleteCustomWord(word) {
+    setStatus('Removing…');
+    try { await deleteWordFromSheet(word); } catch { /* ignore */ }
+    await renderAll();
+    setStatus('');
   }
 
   // TTS
@@ -634,15 +666,25 @@
     return card;
   }
 
-  function renderAll() {
+  function setStatus(msg) {
+    document.getElementById('pageStatus').textContent = msg;
+  }
+
+  async function renderAll() {
     const list = document.getElementById('wordList');
+    if (!SCRIPT_URL) {
+      list.innerHTML = '<p style="text-align:center;color:var(--muted);font-style:italic;padding:2rem">Configure the Google Apps Script URL to load words.</p>';
+      return;
+    }
+    setStatus('Loading…');
+    const custom = await loadCustomWords();
     list.innerHTML = '';
-    const custom = loadCustomWords();
     const all = [...builtIn, ...custom];
     all.forEach((entry, i) => {
       const isCustom = i >= builtIn.length;
       list.appendChild(buildCard(entry, i, isCustom));
     });
+    setStatus('');
   }
 
   // Modal
@@ -746,7 +788,7 @@
     if (e.key === 'Escape') overlay.classList.remove('open');
   });
 
-  document.getElementById('saveWordBtn').addEventListener('click', () => {
+  document.getElementById('saveWordBtn').addEventListener('click', async () => {
     const word = document.getElementById('f-word').value.trim();
     const syllablesRaw = document.getElementById('f-syllables').value.trim();
     const definition = document.getElementById('f-definition').value.trim();
@@ -757,19 +799,29 @@
       return;
     }
 
+    const saveBtn = document.getElementById('saveWordBtn');
+    saveBtn.disabled = true;
+    saveBtn.textContent = 'Saving…';
+
     const syllables = syllablesRaw.split(',').map(s => s.trim()).filter(Boolean);
-    const newEntry = { word, syllables, definition, tip };
+    try {
+      await addWordToSheet({ word, syllables, definition, tip });
+    } catch {
+      saveBtn.disabled = false;
+      saveBtn.textContent = 'Save Word';
+      modalError.textContent = 'Could not save to sheet — check your Script URL.';
+      modalError.classList.add('visible');
+      return;
+    }
 
-    const custom = loadCustomWords();
-    custom.push(newEntry);
-    saveCustomWords(custom);
-
+    saveBtn.disabled = false;
+    saveBtn.textContent = 'Save Word';
     overlay.classList.remove('open');
-    renderAll();
+    await renderAll();
 
     setTimeout(() => {
       const cards = document.querySelectorAll('.word-card');
-      cards[cards.length - 1].scrollIntoView({ behavior: 'smooth', block: 'start' });
+      cards[cards.length - 1]?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }, 100);
   });
 
