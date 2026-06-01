@@ -427,7 +427,7 @@
       <label>Word</label>
       <div class="word-lookup-row">
         <input type="text" id="f-word" placeholder="e.g. renaissance" autocorrect="off" spellcheck="false" />
-        <button class="lookup-btn" id="lookupBtn">Look up</button>
+        <button type="button" class="lookup-btn" id="lookupBtn">Look up</button>
       </div>
       <div class="lookup-status" id="lookupStatus"></div>
     </div>
@@ -446,15 +446,14 @@
     </div>
     <div class="modal-error" id="modalError">Please fill in the word and at least one syllable.</div>
     <div class="modal-actions">
-      <button class="btn-cancel" id="cancelBtn">Cancel</button>
-      <button class="btn-primary" id="saveWordBtn">Save Word</button>
+      <button type="button" class="btn-cancel" id="cancelBtn">Cancel</button>
+      <button type="button" class="btn-primary" id="saveWordBtn">Save Word</button>
     </div>
   </div>
 </div>
 
 <script>
-  const COOKIE_KEY = 'spelling_words';
-  const COOKIE_DAYS = 365;
+  const STORAGE_KEY = 'spelling_words';
 
   const builtIn = [
     {
@@ -471,21 +470,14 @@
     }
   ];
 
-  // Cookie helpers
-  function saveCookie(key, value, days) {
-    const expires = new Date(Date.now() + days * 864e5).toUTCString();
-    document.cookie = `${key}=${encodeURIComponent(JSON.stringify(value))}; expires=${expires}; path=/; SameSite=Lax`;
-  }
-
-  function loadCookie(key) {
-    const match = document.cookie.split('; ').find(r => r.startsWith(key + '='));
-    if (!match) return [];
-    try { return JSON.parse(decodeURIComponent(match.split('=').slice(1).join('='))); }
+  function loadCustomWords() {
+    try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); }
     catch { return []; }
   }
 
-  function loadCustomWords() { return loadCookie(COOKIE_KEY); }
-  function saveCustomWords(arr) { saveCookie(COOKIE_KEY, arr, COOKIE_DAYS); }
+  function saveCustomWords(arr) {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(arr));
+  }
 
   function deleteCustomWord(word) {
     const updated = loadCustomWords().filter(w => w.word !== word);
